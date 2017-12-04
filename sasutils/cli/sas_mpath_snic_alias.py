@@ -32,7 +32,7 @@ import sys
 
 from sasutils.sas import SASBlockDevice
 from sasutils.scsi import EnclosureDevice
-from sasutils.ses import ses_get_snic_nickname
+from sasutils.ses import ses_get_snic_nickname, ses_get_id_xyratex
 from sasutils.sysfs import sysfs
 
 ALIAS_FORMAT = '{nickname}-bay{bay_identifier:02d}'
@@ -60,7 +60,7 @@ def sas_mpath_snic_alias(dmdev):
         encldev = EnclosureDevice(encl.node('device'))
         enclosures[encldev.attrs.sas_address] = encldev
 
-    snics = []
+    names = []
     bayids = []
 
     # dm's underlying sd* devices can easily be found in 'slaves'
@@ -89,20 +89,28 @@ def sas_mpath_snic_alias(dmdev):
         bayids.append(int(sasdev.attrs.bay_identifier))
 
         # Get subenclosure nickname
-        snic = ses_get_snic_nickname(ses_sg) or '%s_no_snic' % dmdev
-        snics.append(snic)
+        nickname = ses_get_snic_nickname(ses_sg)
+        if nickname:
+            names.append(snic)
+        else:
+            # Could not find a SES nickname, check for ID (available on Xyratex JBOD)
+            id = ses_get_id_xyratex(ses_sg)
+            if id:
+                names.append('jbod%s' % id)
+            else:
+                names.append('%s_no_name' % dmdev)
 
-    if not bayids or not snics:
+    if not bayids or not names:
         return
 
     # assert that bay ids are the same...
     bay = bayids[0]
     assert bayids.count(bay) == len(bayids)
 
-    snic = os.path.commonprefix(snics)
-    snic = snic.rstrip('-_ ').replace(' ', '_')
+    name = os.path.commonprefix(names)
+    name = name.rstrip('-_ ').replace(' ', '_')
 
-    return ALIAS_FORMAT.format(nickname=snic, bay_identifier=bay)
+    return ALIAS_FORMAT.format(nickname=name, bay_identifier=bay)
 
 
 def main():

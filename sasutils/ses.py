@@ -51,6 +51,27 @@ def ses_get_snic_nickname(sg_name):
         if mobj:
             return mobj.group(1)
 
+def ses_get_id_xyratex(sg_name):
+    """Get the ID on the LED display on the front of the JBOD"""
+    cmdargs = ['sg_ses', '--page=0x02', '--index=14,0', '/dev/' + sg_name]
+    LOGGER.debug('ses_get_id_xyratex: executing: %s', cmdargs)
+    try:
+        stdout, stderr = subprocess.Popen(cmdargs,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE).communicate()
+    except OSError as err:
+        LOGGER.warning('ses_get_id_xyratex: %s', err)
+        return None
+
+    for line in stderr.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_id_xyratex: sg_ses(stderr): %s', line)
+
+    for line in stdout.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_id_xyratex: sg_ses: %s', line)
+        # The last 2 digits contain the ID in hex
+        mobj = re.match(r'\s+Vendor specific element type, status in hex: 01 00 00 ([0-9]+)', line)
+        if mobj:
+            return int(mobj.group(1), 16)
 
 def _ses_get_ed_line(sg_name):
     """Helper function to get element descriptor associated lines."""
