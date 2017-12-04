@@ -95,8 +95,8 @@ def sas_mpath_snic_alias(dmdev):
         else:
             # Could not find a SES nickname, check for ID (available on Xyratex JBOD)
             id = ses_get_id_xyratex(ses_sg)
-            if id:
-                names.append('jbod%s' % id)
+            if isinstance(id, int):
+                names.append('jbod%02d' % id)
             else:
                 names.append('%s_no_name' % dmdev)
 
