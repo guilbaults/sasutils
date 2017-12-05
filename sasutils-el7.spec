@@ -13,6 +13,8 @@ BuildRequires:  python%{python3_pkgversion}-setuptools
 Requires:       python%{python3_pkgversion}-setuptools
 Requires:       sg3_utils
 Requires:       smp_utils
+Requires:       python-retrying
+Requires:       python-fasteners
 
 %{?python_provide:%python_provide python-sasutils}
 

@@ -52,4 +52,8 @@ setup(name='sasutils',
               'ses_report=sasutils.cli.ses_report:main'
           ],
       },
+      install_requires=[
+          'retrying',
+          'fasteners',
+      ]
       )

@@ -23,12 +23,16 @@ Requires sg_ses from sg3_utils (recent version, like 1.77).
 import logging
 import re
 import subprocess
+from retrying import retry
+import fasteners
 
 __author__ = 'sthiell@stanford.edu (Stephane Thiell)'
 
 LOGGER = logging.getLogger(__name__)
 
 
+@retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
+@fasteners.interprocess_locked('/tmp/sg_ses_lock')
 def ses_get_snic_nickname(sg_name):
     """Get subenclosure nickname (SES-2) [snic]"""
     # SES nickname is not available through sysfs, use sg_ses tool instead
@@ -51,6 +55,8 @@ def ses_get_snic_nickname(sg_name):
         if mobj:
             return mobj.group(1)
 
+@retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
+@fasteners.interprocess_locked('/tmp/sg_ses_lock')
 def ses_get_id_xyratex(sg_name):
     """Get the ID on the LED display on the front of the JBOD"""
     cmdargs = ['sg_ses', '--page=0x02', '--index=14,0', '/dev/' + sg_name]
@@ -65,6 +71,7 @@ def ses_get_id_xyratex(sg_name):
 
     for line in stderr.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_id_xyratex: sg_ses(stderr): %s', line)
+        raise subprocess.CalledProcessError
 
     for line in stdout.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_id_xyratex: sg_ses: %s', line)
