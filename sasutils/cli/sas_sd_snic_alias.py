@@ -31,6 +31,7 @@ import sys
 
 from sasutils.sas import SASBlockDevice
 from sasutils.scsi import EnclosureDevice
+from sasutils.ses import ses_get_snic_nickname, ses_get_id_xyratex
 from sasutils.ses import ses_get_snic_nickname
 from sasutils.sysfs import sysfs
 
@@ -75,7 +76,14 @@ def sas_sd_snic_alias(blkdev):
     bay = int(sasdev.attrs.bay_identifier)
 
     # Get subenclosure nickname
-    snic = ses_get_snic_nickname(ses_sg) or '%s_no_snic' % blkdev.name
+    snic = ses_get_snic_nickname(ses_sg)
+    if snic is None:
+        # Could not find a SES nickname, check for ID (available on Xyratex JBOD)
+        id = ses_get_id_xyratex(ses_sg)
+        if isinstance(id, int):
+            snic = 'jbod%02d' % id
+        else:
+            snic = '%s_no_snic' % blkdev.name
 
     return ALIAS_FORMAT.format(nickname=snic, bay_identifier=bay)
 
