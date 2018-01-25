@@ -60,7 +60,7 @@ def sas_mpath_snic_alias(dmdev):
         encldev = EnclosureDevice(encl.node('device'))
         enclosures[encldev.attrs.sas_address] = encldev
 
-    names = []
+    snics = []
     bayids = []
 
     # dm's underlying sd* devices can easily be found in 'slaves'
@@ -89,28 +89,27 @@ def sas_mpath_snic_alias(dmdev):
         bayids.append(int(sasdev.attrs.bay_identifier))
 
         # Get subenclosure nickname
-        nickname = ses_get_snic_nickname(ses_sg)
-        if nickname:
-            names.append(snic)
-        else:
+        snic = ses_get_snic_nickname(ses_sg)
+        if snic is None:
             # Could not find a SES nickname, check for ID (available on Xyratex JBOD)
             id = ses_get_id_xyratex(ses_sg)
             if isinstance(id, int):
-                names.append('jbod%02d' % id)
+                snic = 'jbod%02d' % id
             else:
-                names.append('%s_no_name' % dmdev)
+                snic = '%s_no_name' % dmdev
+        snics.append(snic)
 
-    if not bayids or not names:
+    if not bayids or not snics:
         return
 
     # assert that bay ids are the same...
     bay = bayids[0]
     assert bayids.count(bay) == len(bayids)
 
-    name = os.path.commonprefix(names)
-    name = name.rstrip('-_ ').replace(' ', '_')
+    snic = os.path.commonprefix(snics)
+    snic = snic.rstrip('-_ ').replace(' ', '_')
 
-    return ALIAS_FORMAT.format(nickname=name, bay_identifier=bay)
+    return ALIAS_FORMAT.format(nickname=snic, bay_identifier=bay)
 
 
 def main():
