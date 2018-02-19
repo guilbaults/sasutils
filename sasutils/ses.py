@@ -23,7 +23,7 @@ Requires sg_ses from sg3_utils (recent version, like 1.77).
 import logging
 import re
 import subprocess
-import sasutils.simpleflock
+import sasutils.simpleflock as SimpleFlock
 
 __author__ = 'sthiell@stanford.edu (Stephane Thiell)'
 
@@ -35,7 +35,7 @@ def ses_get_snic_nickname(sg_name):
     # SES nickname is not available through sysfs, use sg_ses tool instead
     cmdargs = ['sg_ses', '--page=snic', '-I0', '/dev/' + sg_name]
     LOGGER.debug('ses_get_snic_nickname: executing: %s', cmdargs)
-    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+    with SimpleFlock("/tmp/sg_ses_lock"):
         try:
             stdout, stderr = subprocess.Popen(
                 cmdargs,
@@ -59,7 +59,7 @@ def ses_get_id_xyratex(sg_name):
     """Get the ID on the LED display on the front of the JBOD"""
     cmdargs = ['sg_ses', '--page=0x02', '--index=14,0', '/dev/' + sg_name]
     LOGGER.debug('ses_get_id_xyratex: executing: %s', cmdargs)
-    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+    with SimpleFlock("/tmp/sg_ses_lock"):
         try:
             stdout, stderr = subprocess.Popen(
                 cmdargs,
@@ -85,7 +85,7 @@ def _ses_get_ed_line(sg_name):
     """Helper function to get element descriptor associated lines."""
     cmdargs = ['sg_ses', '--page=ed', '--join', '/dev/' + sg_name]
     LOGGER.debug('ses_get_ed_metrics: executing: %s', cmdargs)
-    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+    with SimpleFlock("/tmp/sg_ses_lock"):
         stdout, stderr = subprocess.Popen(cmdargs,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE).communicate()
