@@ -29,6 +29,7 @@ __author__ = 'sthiell@stanford.edu (Stephane Thiell)'
 
 LOGGER = logging.getLogger(__name__)
 
+
 def ses_get_snic_nickname(sg_name):
     """Get subenclosure nickname (SES-2) [snic]"""
     # SES nickname is not available through sysfs, use sg_ses tool instead
@@ -36,9 +37,10 @@ def ses_get_snic_nickname(sg_name):
     LOGGER.debug('ses_get_snic_nickname: executing: %s', cmdargs)
     with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
         try:
-            stdout, stderr = subprocess.Popen(cmdargs,
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE).communicate()
+            stdout, stderr = subprocess.Popen(
+                cmdargs,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE).communicate()
         except OSError as err:
             LOGGER.warning('ses_get_snic_nickname: %s', err)
             return None
@@ -52,15 +54,17 @@ def ses_get_snic_nickname(sg_name):
         if mobj:
             return mobj.group(1)
 
+
 def ses_get_id_xyratex(sg_name):
     """Get the ID on the LED display on the front of the JBOD"""
     cmdargs = ['sg_ses', '--page=0x02', '--index=14,0', '/dev/' + sg_name]
     LOGGER.debug('ses_get_id_xyratex: executing: %s', cmdargs)
     with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
         try:
-            stdout, stderr = subprocess.Popen(cmdargs,
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE).communicate()
+            stdout, stderr = subprocess.Popen(
+                cmdargs,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE).communicate()
         except OSError as err:
             LOGGER.warning('ses_get_id_xyratex: %s', err)
             return None
@@ -75,6 +79,7 @@ def ses_get_id_xyratex(sg_name):
         mobj = re.match(r'\s+Vendor specific element type, status in hex: 01 00 00 ([0-9]+)', line)
         if mobj:
             return int(mobj.group(1), 16)
+
 
 def _ses_get_ed_line(sg_name):
     """Helper function to get element descriptor associated lines."""
