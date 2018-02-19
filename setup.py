@@ -53,7 +53,5 @@ setup(name='sasutils',
           ],
       },
       install_requires=[
-          'retrying',
-          'fasteners',
       ]
       )

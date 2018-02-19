@@ -23,28 +23,25 @@ Requires sg_ses from sg3_utils (recent version, like 1.77).
 import logging
 import re
 import subprocess
-from retrying import retry
-import fasteners
+import sasutils.simpleflock
 
 __author__ = 'sthiell@stanford.edu (Stephane Thiell)'
 
 LOGGER = logging.getLogger(__name__)
 
-
-@retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
-@fasteners.interprocess_locked('/tmp/sg_ses_lock')
 def ses_get_snic_nickname(sg_name):
     """Get subenclosure nickname (SES-2) [snic]"""
     # SES nickname is not available through sysfs, use sg_ses tool instead
     cmdargs = ['sg_ses', '--page=snic', '-I0', '/dev/' + sg_name]
     LOGGER.debug('ses_get_snic_nickname: executing: %s', cmdargs)
-    try:
-        stdout, stderr = subprocess.Popen(cmdargs,
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE).communicate()
-    except OSError as err:
-        LOGGER.warning('ses_get_snic_nickname: %s', err)
-        return None
+    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+        try:
+            stdout, stderr = subprocess.Popen(cmdargs,
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.PIPE).communicate()
+        except OSError as err:
+            LOGGER.warning('ses_get_snic_nickname: %s', err)
+            return None
 
     for line in stderr.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_snic_nickname: sg_ses(stderr): %s', line)
@@ -55,19 +52,18 @@ def ses_get_snic_nickname(sg_name):
         if mobj:
             return mobj.group(1)
 
-@retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
-@fasteners.interprocess_locked('/tmp/sg_ses_lock')
 def ses_get_id_xyratex(sg_name):
     """Get the ID on the LED display on the front of the JBOD"""
     cmdargs = ['sg_ses', '--page=0x02', '--index=14,0', '/dev/' + sg_name]
     LOGGER.debug('ses_get_id_xyratex: executing: %s', cmdargs)
-    try:
-        stdout, stderr = subprocess.Popen(cmdargs,
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE).communicate()
-    except OSError as err:
-        LOGGER.warning('ses_get_id_xyratex: %s', err)
-        return None
+    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+        try:
+            stdout, stderr = subprocess.Popen(cmdargs,
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.PIPE).communicate()
+        except OSError as err:
+            LOGGER.warning('ses_get_id_xyratex: %s', err)
+            return None
 
     for line in stderr.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_id_xyratex: sg_ses(stderr): %s', line)
@@ -84,9 +80,10 @@ def _ses_get_ed_line(sg_name):
     """Helper function to get element descriptor associated lines."""
     cmdargs = ['sg_ses', '--page=ed', '--join', '/dev/' + sg_name]
     LOGGER.debug('ses_get_ed_metrics: executing: %s', cmdargs)
-    stdout, stderr = subprocess.Popen(cmdargs,
-                                      stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE).communicate()
+    with simpleflock.SimpleFlock("/tmp/sg_ses_lock"):
+        stdout, stderr = subprocess.Popen(cmdargs,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE).communicate()
 
     for line in stderr.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_ed_metrics: sg_ses(stderr): %s', line)
