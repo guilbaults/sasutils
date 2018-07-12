@@ -5,8 +5,8 @@ Release:        1%{?dist}
 Summary:        Serial Attached SCSI (SAS) utilities
 
 License:        ASL 2.0
-URL:            https://github.com/stanford-rc/sasutils
-Source0:        https://github.com/guilbaults/%{name}/archive/%{gittag}/%{name}-%{version}.tar.gz
+URL:            https://github.com/guilbaults/sasutils
+Source0:        https://github.com/guilbaults/%{name}/archive/v%{gittag}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python%{python3_pkgversion}-devel
