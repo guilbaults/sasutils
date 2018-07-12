@@ -1,11 +1,12 @@
 Name:           sasutils
-Version:        0.3.9
+Version:        0.4.0
+%global gittag 0.4.0
 Release:        1%{?dist}
 Summary:        Serial Attached SCSI (SAS) utilities
 
 License:        ASL 2.0
 URL:            https://github.com/stanford-rc/sasutils
-Source0:        https://files.pythonhosted.org/packages/source/s/%{name}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/guilbaults/%{name}/archive/%{gittag}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python%{python3_pkgversion}-devel
@@ -13,6 +14,10 @@ BuildRequires:  python%{python3_pkgversion}-setuptools
 Requires:       python%{python3_pkgversion}-setuptools
 Requires:       sg3_utils
 Requires:       smp_utils
+Requires:       fasteners
+Requires:       retrying
+Requires:       monotonic
+Requires:       six
 
 %{?python_provide:%python_provide python-sasutils}
 
@@ -21,6 +26,7 @@ sasutils is a set of command-line tools and a Python library to ease the
 administration of Serial Attached SCSI (SAS) fabrics.
 
 %prep
+%autosetup -n %{name}-%{gittag}
 %setup -q
 
 %build
@@ -51,6 +57,9 @@ install -p -m 0644 doc/man/man1/ses_report.1 %{buildroot}/%{_mandir}/man1/
 %license LICENSE.txt
 
 %changelog
+* Thu Jul 12 2018 Simon Guilbault <simon.guilbault@calculquebec.ca> 0.4.0-1
+- Adding support for Xyratex 84 slots JBODs
+
 * Tue Aug 29 2017 Stephane Thiell <sthiell@stanford.edu> 0.3.9-1
 - update version
 
