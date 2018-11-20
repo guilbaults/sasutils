@@ -56,6 +56,56 @@ def ses_get_snic_nickname(sg_name):
             return mobj.group(1)
 
 
+def ses_get_enclosure_from_wwn(wwn):
+    """Return the sg device of the enclosure with the provided wwn"""
+    cmdargs = ['lsscsi', '-g']
+    LOGGER.debug('ses_get_enclosure_from_wwn: executing: %s', cmdargs)
+    try:
+        stdout, stderr = subprocess.Popen(cmdargs,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE).communicate()
+    except OSError as err:
+        LOGGER.warning('ses_get_enclosure_from_wwn: %s', err)
+        return None
+
+    for line in stderr.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_enclosure_from_wwn: sg_ses(stderr): %s', line)
+        raise subprocess.CalledProcessError
+
+    for line in stdout.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_enclosure_from_wwn: sg_ses: %s', line)
+        if 'enclosu' in line:
+            mobj = re.match(r'.*\/dev\/(sg\d+)', line)
+            sg = mobj.group(1)
+            test = ses_get_enclosure_wwn_from_sg(sg)
+            if test == wwn:
+                return sg
+    return None # Enclosure not found
+
+@retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
+@fasteners.interprocess_locked('/tmp/sg_ses_lock')
+def ses_get_enclosure_wwn_from_sg(sg_name):
+    """Get the WWN of a enclosure from the sg device"""
+    cmdargs = ['sg_ses', '--page=0x01', '/dev/' + sg_name]
+    LOGGER.debug('ses_get_enclosure_from_wwn: executing: %s', cmdargs)
+    try:
+        stdout, stderr = subprocess.Popen(cmdargs,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE).communicate()
+    except OSError as err:
+        LOGGER.warning('ses_get_enclosure_from_wwn: %s', err)
+        return None
+
+    for line in stderr.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_enclosure_from_wwn: sg_ses(stderr): %s', line)
+        raise subprocess.CalledProcessError
+
+    for line in stdout.decode("utf-8").splitlines():
+        LOGGER.debug('ses_get_enclosure_from_wwn: sg_ses: %s', line)
+        mobj = re.match(r'^\s+enclosure logical identifier \(hex\): (\w+)$', line)
+        if mobj:
+            return "0x{}".format(mobj.group(1))
+
 @retry(stop_max_attempt_number=10, wait_random_min=1000, wait_random_max=10000)
 @fasteners.interprocess_locked('/tmp/sg_ses_lock')
 def ses_get_id_xyratex(sg_name):

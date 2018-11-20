@@ -31,8 +31,7 @@ import sys
 
 from sasutils.sas import SASBlockDevice
 from sasutils.scsi import EnclosureDevice
-from sasutils.ses import ses_get_snic_nickname, ses_get_id_xyratex
-from sasutils.ses import ses_get_snic_nickname
+from sasutils.ses import ses_get_snic_nickname, ses_get_id_xyratex, ses_get_enclosure_from_wwn
 from sasutils.sysfs import sysfs
 
 ALIAS_FORMAT = '{nickname}-bay{bay_identifier:02d}'
@@ -57,23 +56,30 @@ def sas_sd_snic_alias(blkdev):
     blkdev = SASBlockDevice(sysfs.node('block').node(blkdev).node('device'))
     sasdev = blkdev.end_device.sas_device
 
+    # Retrieve bay_identifier from matching sas_device
+    bay = int(sasdev.attrs.bay_identifier)
+
     if blkdev.array_device:
         # 'enclosure_device' symlink is present (preferred method)
         # Use array_device and enclosure to retrieve the ses sg name
         ses_sg = blkdev.array_device.enclosure.scsi_generic.sg_name
+        # Retrieve bay_identifier from matching sas_device
+        bay = int(sasdev.attrs.bay_identifier)
+
     else:
         # 'enclosure_device' symlink is absent: use workaround (see NOTE)
         try:
-            encl = enclosures[sasdev.attrs.enclosure_identifier]
-            ses_sg = encl.scsi_generic.sg_name
+            from_wwn = ses_get_enclosure_from_wwn(sasdev.attrs.enclosure_identifier)
+            if from_wwn:
+                ses_sg = from_wwn
+            else:
+                encl = enclosures[sasdev.attrs.enclosure_identifier]
+                ses_sg = encl.scsi_generic.sg_name
         except KeyError:
             # not an array device
             logging.warning('%s not an array device (%s)', blkdev.name,
                             blkdev.sysfsnode.path)
             raise
-
-    # Retrieve bay_identifier from matching sas_device
-    bay = int(sasdev.attrs.bay_identifier)
 
     # Get subenclosure nickname
     snic = ses_get_snic_nickname(ses_sg)
