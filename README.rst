@@ -174,6 +174,33 @@ This will result in useful symlinks.
 
        For **sas_mpath_snic_alias** to work with a JBOD having two SIMs, both enclosure nicknames should have a common prefix (eg. "myjbodX-") that will be automatically used.
 
+Setting the enclosure nickname or ID
+====================================
+Verify if your JBOD support nickname or the Xyratex style of ID. If there is a "nickname" page on `sg_ses /dev/sgX` you can set a nickname on the JBOD, if not you might still be able to set an ID depending on the JBOD model. 
+
+Set a JBOD nickname:
+
+    .. code-block::
+    
+        # sg_ses --page 0x0f --control --nickname=1R11-U37 /dev/sg17
+        # sg_ses --page 0x0f /dev/sg17
+        DELL      MD1420            1.07
+        Subenclosure nickname status diagnostic page:
+         number of secondary subenclosures: 0
+         generation code: 0x0
+          subenclosure identifier: 0
+          nickname status: 0x0
+          nickname additional status: 0x0
+          nickname language code:
+          nickname: 1R11-U37
+
+If you have a Xyratex JBOD without the nickname feature, you can set the ID on the 84 slots model by pressing the buttons on the front of the JBOD. The LCD will show the enclosure ID and the same number will be discovered by the script.
+
+For the SP-34106 model, the enclosure ID need to be set using GEM, with the serial port or the inband CLI
+
+    .. code-block::
+    
+        # ./getstatus -d /dev/sg11 -cli set_encl_id 42
 
 sasutils Python library
 =======================
