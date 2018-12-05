@@ -1,6 +1,6 @@
 Name:           sasutils
-Version:        0.4.1
-%global gittag 0.4.1
+Version:        0.4.2
+%global gittag 0.4.2
 Release:        1%{?dist}
 Summary:        Serial Attached SCSI (SAS) utilities
 
@@ -57,6 +57,9 @@ install -p -m 0644 doc/man/man1/ses_report.1 %{buildroot}/%{_mandir}/man1/
 %license LICENSE.txt
 
 %changelog
+* Wed  5 Dec 2018 Simon Guilbault <simon.guilbault@calculquebec.ca> 0.4.2-1
+- Adding support for Exos E 4U106 (SP-34106)
+
 * Tue Nov 20 2018 Simon Guilbault <simon.guilbault@calculquebec.ca> 0.4.1-1
 - Adding another workaround for enclosure discovery
 
