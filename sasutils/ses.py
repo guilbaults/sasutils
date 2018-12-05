@@ -127,7 +127,7 @@ def ses_get_id_xyratex(sg_name):
     for line in stdout.decode("utf-8").splitlines():
         LOGGER.debug('ses_get_id_xyratex: sg_ses: %s', line)
         # The last 2 digits contain the ID in hex
-        mobj = re.match(r'\s+Vendor specific element type, status in hex: 01 00 00 ([0-9]+)', line)
+        mobj = re.match(r'\s+Vendor specific element type, status in hex: \w\w \w\w \w\w (\w\w)', line)
         if mobj:
             return int(mobj.group(1), 16)
 
